@@ -59,11 +59,11 @@ def main():
 
     image_batch = tf.stack([image, image_rev])
     h_orig, w_orig = tf.cast(tf.shape(image_batch)[1], tf.float32), tf.cast(tf.shape(image_batch)[2], tf.float32)
-    image_batch050 = tf.image.resize_images(image_batch, tf.stack([tf.to_int32(tf.multiply(h_orig, 0.50)), tf.to_int32(tf.multiply(w_orig, 0.50))]))
-    image_batch075 = tf.image.resize_images(image_batch, tf.stack([tf.to_int32(tf.multiply(h_orig, 0.75)), tf.to_int32(tf.multiply(w_orig, 0.75))]))
-    image_batch125 = tf.image.resize_images(image_batch, tf.stack([tf.to_int32(tf.multiply(h_orig, 1.25)), tf.to_int32(tf.multiply(w_orig, 1.25))]))
-    image_batch150 = tf.image.resize_images(image_batch, tf.stack([tf.to_int32(tf.multiply(h_orig, 1.50)), tf.to_int32(tf.multiply(w_orig, 1.50))]))
-    image_batch175 = tf.image.resize_images(image_batch, tf.stack([tf.to_int32(tf.multiply(h_orig, 1.75)), tf.to_int32(tf.multiply(w_orig, 1.75))]))
+    image_batch050 = tf.image.resize(image_batch, tf.stack([tf.to_int32(tf.multiply(h_orig, 0.50)), tf.to_int32(tf.multiply(w_orig, 0.50))]))
+    image_batch075 = tf.image.resize(image_batch, tf.stack([tf.to_int32(tf.multiply(h_orig, 0.75)), tf.to_int32(tf.multiply(w_orig, 0.75))]))
+    image_batch125 = tf.image.resize(image_batch, tf.stack([tf.to_int32(tf.multiply(h_orig, 1.25)), tf.to_int32(tf.multiply(w_orig, 1.25))]))
+    image_batch150 = tf.image.resize(image_batch, tf.stack([tf.to_int32(tf.multiply(h_orig, 1.50)), tf.to_int32(tf.multiply(w_orig, 1.50))]))
+    image_batch175 = tf.image.resize(image_batch, tf.stack([tf.to_int32(tf.multiply(h_orig, 1.75)), tf.to_int32(tf.multiply(w_orig, 1.75))]))
          
     # Create network.
     with tf.variable_scope('', reuse=False):
@@ -102,25 +102,29 @@ def main():
 
 
     # combine resize
-    parsing_out1 = tf.reduce_mean(tf.stack([tf.image.resize_images(parsing_out1_050, tf.shape(image_batch)[1:3,]),
-                                            tf.image.resize_images(parsing_out1_075, tf.shape(image_batch)[1:3,]),
-                                            tf.image.resize_images(parsing_out1_100, tf.shape(image_batch)[1:3,]),
-                                            tf.image.resize_images(parsing_out1_125, tf.shape(image_batch)[1:3,]),
-                                            tf.image.resize_images(parsing_out1_150, tf.shape(image_batch)[1:3,]),
-                                            tf.image.resize_images(parsing_out1_175, tf.shape(image_batch)[1:3,])]), axis=0)
+    parsing_out1 = tf.reduce_mean(tf.stack([
+        tf.image.resize(parsing_out1_050, tf.shape(image_batch)[1:3,]),
+        tf.image.resize(parsing_out1_075, tf.shape(image_batch)[1:3,]),
+        tf.image.resize(parsing_out1_100, tf.shape(image_batch)[1:3,]),
+        tf.image.resize(parsing_out1_125, tf.shape(image_batch)[1:3,]),
+        tf.image.resize(parsing_out1_150, tf.shape(image_batch)[1:3,]),
+        tf.image.resize(parsing_out1_175, tf.shape(image_batch)[1:3,])
+    ]), axis=0)
 
-    parsing_out2 = tf.reduce_mean(tf.stack([tf.image.resize_images(parsing_out2_050, tf.shape(image_batch)[1:3,]),
-                                            tf.image.resize_images(parsing_out2_075, tf.shape(image_batch)[1:3,]),
-                                            tf.image.resize_images(parsing_out2_100, tf.shape(image_batch)[1:3,]),
-                                            tf.image.resize_images(parsing_out2_125, tf.shape(image_batch)[1:3,]),
-                                            tf.image.resize_images(parsing_out2_150, tf.shape(image_batch)[1:3,]),
-                                            tf.image.resize_images(parsing_out2_175, tf.shape(image_batch)[1:3,])]), axis=0)
+    parsing_out2 = tf.reduce_mean(tf.stack([
+        tf.image.resize(parsing_out2_050, tf.shape(image_batch)[1:3,]),
+        tf.image.resize(parsing_out2_075, tf.shape(image_batch)[1:3,]),
+        tf.image.resize(parsing_out2_100, tf.shape(image_batch)[1:3,]),
+        tf.image.resize(parsing_out2_125, tf.shape(image_batch)[1:3,]),
+        tf.image.resize(parsing_out2_150, tf.shape(image_batch)[1:3,]),
+        tf.image.resize(parsing_out2_175, tf.shape(image_batch)[1:3,])
+    ]), axis=0)
 
 
-    edge_out2_100 = tf.image.resize_images(edge_out2_100, tf.shape(image_batch)[1:3,])
-    edge_out2_125 = tf.image.resize_images(edge_out2_125, tf.shape(image_batch)[1:3,])
-    edge_out2_150 = tf.image.resize_images(edge_out2_150, tf.shape(image_batch)[1:3,])
-    edge_out2_175 = tf.image.resize_images(edge_out2_175, tf.shape(image_batch)[1:3,])
+    edge_out2_100 = tf.image.resize(edge_out2_100, tf.shape(image_batch)[1:3,])
+    edge_out2_125 = tf.image.resize(edge_out2_125, tf.shape(image_batch)[1:3,])
+    edge_out2_150 = tf.image.resize(edge_out2_150, tf.shape(image_batch)[1:3,])
+    edge_out2_175 = tf.image.resize(edge_out2_175, tf.shape(image_batch)[1:3,])
     edge_out2 = tf.reduce_mean(tf.stack([edge_out2_100, edge_out2_125, edge_out2_150, edge_out2_175]), axis=0)
                                            
     raw_output = tf.reduce_mean(tf.stack([parsing_out1, parsing_out2]), axis=0)

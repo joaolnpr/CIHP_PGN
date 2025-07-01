@@ -21,7 +21,7 @@ def image_scaling(img):
     h_new = tf.to_int32(tf.multiply(tf.cast(tf.shape(img)[0], tf.float32), scale))
     w_new = tf.to_int32(tf.multiply(tf.cast(tf.shape(img)[1], tf.float32), scale))
     new_shape = tf.squeeze(tf.stack([h_new, w_new]), squeeze_dims=[1])
-    img = tf.image.resize_images(img, new_shape)
+    img = tf.image.resize(img, new_shape)
     # label = tf.image.resize_nearest_neighbor(tf.expand_dims(label, 0),
     #                                          new_shape)
     # label = tf.squeeze(label, squeeze_dims=[0])
@@ -56,7 +56,7 @@ def random_resize_img_labels(image, label, resized_h, resized_w):
     w_new = tf.to_int32(tf.multiply(tf.cast(resized_w, tf.float32), scale))
 
     new_shape = tf.squeeze(tf.stack([h_new, w_new]), squeeze_dims=[1])
-    img = tf.image.resize_images(image, new_shape)
+    img = tf.image.resize(image, new_shape)
     label = tf.image.resize_nearest_neighbor(tf.expand_dims(label, 0),
                                              new_shape)
     label = tf.squeeze(label, squeeze_dims=[0])
@@ -65,7 +65,7 @@ def random_resize_img_labels(image, label, resized_h, resized_w):
 
 def resize_img_labels(image, label, resized_h, resized_w):
     new_shape = tf.stack([tf.to_int32(resized_h), tf.to_int32(resized_w)])
-    img = tf.image.resize_images(image, new_shape)
+    img = tf.image.resize(image, new_shape)
     label = tf.image.resize_nearest_neighbor(tf.expand_dims(label, 0),
                                              new_shape)
     label = tf.squeeze(label, squeeze_dims=[0])

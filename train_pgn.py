@@ -85,11 +85,11 @@ def main():
                 edge_out2_final = net.layers['edge_rf_fc']
 
                 # combine resize
-                edge_out1 = tf.image.resize_images(edge_out1_final, tf.shape(next_image)[1:3,])
-                edge_out2 = tf.image.resize_images(edge_out2_final, tf.shape(next_image)[1:3,])
-                edge_out1_res5 = tf.image.resize_images(edge_out1_res5, tf.shape(next_image)[1:3,])
-                edge_out1_res4 = tf.image.resize_images(edge_out1_res4, tf.shape(next_image)[1:3,])
-                edge_out1_res3 = tf.image.resize_images(edge_out1_res3, tf.shape(next_image)[1:3,])
+                edge_out1 = tf.image.resize(edge_out1_final, tf.shape(next_image)[1:3,])
+                edge_out2 = tf.image.resize(edge_out2_final, tf.shape(next_image)[1:3,])
+                edge_out1_res5 = tf.image.resize(edge_out1_res5, tf.shape(next_image)[1:3,])
+                edge_out1_res4 = tf.image.resize(edge_out1_res4, tf.shape(next_image)[1:3,])
+                edge_out1_res3 = tf.image.resize(edge_out1_res3, tf.shape(next_image)[1:3,])
 
                 ### Predictions: ignoring all predictions with labels greater or equal than n_classes
                 raw_prediction_p1 = tf.reshape(parsing_out1, [-1, N_CLASSES])

@@ -285,7 +285,7 @@ class Network(object):
     @layer
     def upsample(self, input, size_h, size_w, name):
         with tf.variable_scope(name) as scope:
-            return tf.image.resize_images(input, size=[size_h, size_w])
+            return tf.image.resize(input, size=[size_h, size_w])
 
     @layer
     def pyramid_pooling(self, input, o_c, pool_size, name):
