@@ -137,12 +137,12 @@ def main():
     preds = tf.reshape(pred_all, [-1,])
     gt = tf.reshape(label_batch, [-1,])
     weights = tf.cast(tf.less_equal(gt, N_CLASSES - 1), tf.int32) # Ignoring all labels greater than or equal to n_classes.
-    mIoU, update_op_iou = tf.contrib.metrics.streaming_mean_iou(preds, gt, num_classes=N_CLASSES, weights=weights)
-    macc, update_op_acc = tf.contrib.metrics.streaming_accuracy(preds, gt, weights=weights)
+    mIoU, update_op_iou = tf.compat.v1.metrics.mean_iou(preds, gt, num_classes=N_CLASSES, weights=weights)
+    macc, update_op_acc = tf.compat.v1.metrics.accuracy(preds, gt, weights=weights)
 
     # precision and recall
-    recall, update_op_recall = tf.contrib.metrics.streaming_recall(res_edge, edge_gt_batch)
-    precision, update_op_precision = tf.contrib.metrics.streaming_precision(res_edge, edge_gt_batch)
+    recall, update_op_recall = tf.compat.v1.metrics.recall(res_edge, edge_gt_batch)
+    precision, update_op_precision = tf.compat.v1.metrics.precision(res_edge, edge_gt_batch)
 
     update_op = tf.group(update_op_iou, update_op_acc, update_op_recall, update_op_precision)
 
