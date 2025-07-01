@@ -19,6 +19,8 @@ from utils.ops import  *
 from utils.utils import *
 from utils.model_pgn import *
 
+tf.compat.v1.disable_eager_execution()
+
 argp = argparse.ArgumentParser(description="Inference pipeline")
 argp.add_argument('-i',
                   '--directory',
