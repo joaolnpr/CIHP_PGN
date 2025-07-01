@@ -66,17 +66,17 @@ def main():
     image_batch175 = tf.image.resize(image_batch, tf.stack([tf.cast(tf.multiply(h_orig, 1.75), tf.int32), tf.cast(tf.multiply(w_orig, 1.75), tf.int32)]))
          
     # Create network.
-    with tf.variable_scope('', reuse=False):
+    with tf.compat.v1.variable_scope('', reuse=False):
         net_100 = PGNModel({'data': image_batch}, is_training=False, n_classes=N_CLASSES)
-    with tf.variable_scope('', reuse=True):
+    with tf.compat.v1.variable_scope('', reuse=True):
         net_050 = PGNModel({'data': image_batch050}, is_training=False, n_classes=N_CLASSES)
-    with tf.variable_scope('', reuse=True):
+    with tf.compat.v1.variable_scope('', reuse=True):
         net_075 = PGNModel({'data': image_batch075}, is_training=False, n_classes=N_CLASSES)
-    with tf.variable_scope('', reuse=True):
+    with tf.compat.v1.variable_scope('', reuse=True):
         net_125 = PGNModel({'data': image_batch125}, is_training=False, n_classes=N_CLASSES)
-    with tf.variable_scope('', reuse=True):
+    with tf.compat.v1.variable_scope('', reuse=True):
         net_150 = PGNModel({'data': image_batch150}, is_training=False, n_classes=N_CLASSES)
-    with tf.variable_scope('', reuse=True):
+    with tf.compat.v1.variable_scope('', reuse=True):
         net_175 = PGNModel({'data': image_batch175}, is_training=False, n_classes=N_CLASSES)
     # parsing net
 
