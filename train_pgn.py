@@ -123,7 +123,7 @@ def main():
                 edge_neg_mask = tf.cast(edge_neg_mask, tf.float32)
 
                 total_pixels = tf.cast(tf.shape(next_edge)[1] * tf.shape(next_edge)[2], tf.int32)
-                pos_pixels = tf.reduce_sum(tf.to_int32(next_edge))
+                pos_pixels = tf.reduce_sum(tf.cast(next_edge, tf.int32))
                 neg_pixels = tf.subtract(total_pixels, pos_pixels)
                 pos_weight = tf.cast(tf.divide(neg_pixels, total_pixels), tf.float32)
                 neg_weight = tf.cast(tf.divide(pos_pixels, total_pixels), tf.float32)
