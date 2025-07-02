@@ -68,14 +68,20 @@ class Network(object):
 
     def make_var(self, name, shape):
         '''Creates a new TensorFlow variable.'''
+        if isinstance(shape, int):
+            shape = [shape]
         return tf.Variable(tf.random.truncated_normal(shape, stddev=0.01), name=name, trainable=self.trainable)
 
     def make_w_var(self, name, shape):
         '''Creates a new TensorFlow variable.'''
         stddev=0.01
+        if isinstance(shape, int):
+            shape = [shape]
         return tf.Variable(tf.random.truncated_normal(shape, stddev=stddev), name=name, trainable=self.trainable)
 
     def make_b_var(self, name, shape):
+        if isinstance(shape, int):
+            shape = [shape]
         return tf.Variable(tf.zeros(shape), name=name, trainable=self.trainable)
 
     def validate_padding(self, padding):
