@@ -21,6 +21,7 @@ N_CLASSES = 20
 DATA_DIR = './datasets/CIHP'
 LIST_PATH = './datasets/CIHP/list/val.txt'
 DATA_ID_LIST = './datasets/CIHP/list/val_id.txt'
+
 # Check for checkpoint in multiple locations
 if os.path.exists('/home/paperspace/checkpoint/CIHP_pgn'):
     RESTORE_FROM = '/home/paperspace/checkpoint/CIHP_pgn'
@@ -45,6 +46,7 @@ else:
             print(f"[WARNING] Quick download failed: {result.stderr}")
     except Exception as e:
         print(f"[WARNING] Could not run quick download: {e}")
+
 BATCH_SIZE = 1
 
 # Check if required files exist
@@ -76,16 +78,16 @@ try:
     model = PGNKeras(n_classes=N_CLASSES, checkpoint_path=RESTORE_FROM)
 
     # Check if running from API (expects output in parent directory)
-if os.path.exists('/home/paperspace/output'):
-    # API mode - save to expected location
-    parsing_dir = '/home/paperspace/output'
-    edge_dir = '/home/paperspace/output'
-else:
-    # Standalone mode - use local output
-    parsing_dir = './output/cihp_parsing_maps'
-    edge_dir = './output/cihp_edge_maps'
-    os.makedirs(parsing_dir, exist_ok=True)
-    os.makedirs(edge_dir, exist_ok=True)
+    if os.path.exists('/home/paperspace/output'):
+        # API mode - save to expected location
+        parsing_dir = '/home/paperspace/output'
+        edge_dir = '/home/paperspace/output'
+    else:
+        # Standalone mode - use local output
+        parsing_dir = './output/cihp_parsing_maps'
+        edge_dir = './output/cihp_edge_maps'
+        os.makedirs(parsing_dir, exist_ok=True)
+        os.makedirs(edge_dir, exist_ok=True)
 
     # Get image paths for saving
     image_list = [line.strip() for line in open(LIST_PATH)]

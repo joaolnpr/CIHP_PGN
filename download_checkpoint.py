@@ -10,8 +10,9 @@ import subprocess
 import zipfile
 from pathlib import Path
 
+# https://drive.google.com/file/d//view?usp=sharing
 # Google Drive file ID from official repository
-GDRIVE_FILE_ID = "1Mqpse5Gen4V4403wFEpv3w3JAsWw2uhk"
+GDRIVE_FILE_ID = "1pnZKaMlxzNWId78YLBoj7iFniradsBmi"
 CHECKPOINT_DIR = "./checkpoint/CIHP_pgn"
 DOWNLOAD_URL = f"https://drive.google.com/uc?id={GDRIVE_FILE_ID}"
 
