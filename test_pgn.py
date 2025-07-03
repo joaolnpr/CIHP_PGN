@@ -7,20 +7,15 @@ import time
 import scipy.misc
 import scipy.io as sio
 import cv2
+import numpy as np
 from glob import glob
 os.environ["CUDA_VISIBLE_DEVICES"]="0"
 
 import tensorflow as tf
-import numpy as np
 from PIL import Image
-from utils import *
-from utils.image_reader import create_dataset
 from utils.pgn_keras import PGNKeras
 
 N_CLASSES = 20
-DATA_DIR = './datasets/CIHP'
-LIST_PATH = './datasets/CIHP/list/val.txt'
-DATA_ID_LIST = './datasets/CIHP/list/val_id.txt'
 
 # Check for checkpoint in multiple locations
 if os.path.exists('/home/paperspace/checkpoint/CIHP_pgn'):
@@ -47,93 +42,69 @@ else:
     except Exception as e:
         print(f"[WARNING] Could not run quick download: {e}")
 
-BATCH_SIZE = 1
-
-# Check if required files exist
-if not os.path.exists(DATA_ID_LIST):
-    print(f"Error: Required file {DATA_ID_LIST} not found")
-    sys.exit(1)
-
-if not os.path.exists(LIST_PATH):
-    print(f"Error: Required file {LIST_PATH} not found")
-    sys.exit(1)
-
-with open(DATA_ID_LIST, 'r') as f:
-    NUM_STEPS = len(f.readlines())
+def preprocess_image(image_path, target_size=(512, 512)):
+    """Preprocess image for CIHP_PGN inference"""
+    # Load image
+    img = cv2.imread(image_path)
+    if img is None:
+        raise ValueError(f"Could not load image: {image_path}")
+    
+    # Convert BGR to RGB and swap to BGR for model compatibility
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    img_b, img_g, img_r = img[:,:,2], img[:,:,1], img[:,:,0]
+    img = np.stack([img_b, img_g, img_r], axis=2)
+    
+    # Resize
+    img = cv2.resize(img, target_size)
+    
+    # Convert to float and normalize
+    img = img.astype(np.float32)
+    img -= np.array([125.0, 114.4, 107.9])  # IMG_MEAN
+    
+    # Add batch dimension
+    img = np.expand_dims(img, axis=0)
+    
+    return img
 
 try:
-    # Prepare dataset
-    val_dataset = create_dataset(
-        data_dir=DATA_DIR,
-        data_list=LIST_PATH,
-        data_id_list=DATA_ID_LIST,
-        input_size=(512, 512),
-        random_scale=False,
-        random_mirror=False,
-        batch_size=BATCH_SIZE,
-        shuffle=False
-    )
-
     # Load model
     model = PGNKeras(n_classes=N_CLASSES, checkpoint_path=RESTORE_FROM)
 
-    # Check if running from API (expects output in parent directory)
-    if os.path.exists('/home/paperspace/output'):
-        # API mode - save to expected location
-        parsing_dir = '/home/paperspace/output'
-        edge_dir = '/home/paperspace/output'
+    # Check if running from API (single image mode)
+    if os.path.exists('/home/paperspace/datasets/input.jpg'):
+        # API mode - process single image
+        input_image_path = '/home/paperspace/datasets/input.jpg'
+        
+        # Preprocess image
+        image_batch = preprocess_image(input_image_path)
+        
+        # Run inference
+        parsing_fc, parsing_rf_fc, edge_rf_fc = model(image_batch)
+        
+        # Process outputs
+        parsing_out = np.argmax(parsing_fc, axis=-1)
+        edge_out = 1.0 / (1.0 + np.exp(-edge_rf_fc))  # sigmoid
+        parsing_np = parsing_out.astype(np.uint8)
+        edge_np = (edge_out > 0.5).astype(np.uint8) * 255
+        
+        # Save outputs
+        output_parsing = '/home/paperspace/output/input.png'
+        output_edge = '/home/paperspace/output/input_edge.png'
+        
+        # Ensure output directory exists
+        os.makedirs('/home/paperspace/output', exist_ok=True)
+        
+        cv2.imwrite(output_parsing, parsing_np[0])
+        cv2.imwrite(output_edge, edge_np[0])
+        
+        print(f"✅ Saved parsing mask: {output_parsing}")
+        print(f"✅ Saved edge mask: {output_edge}")
+        print(f"✅ Human parsing completed successfully!")
+        
     else:
-        # Standalone mode - use local output
-        parsing_dir = './output/cihp_parsing_maps'
-        edge_dir = './output/cihp_edge_maps'
-        os.makedirs(parsing_dir, exist_ok=True)
-        os.makedirs(edge_dir, exist_ok=True)
-
-    # Get image paths for saving
-    image_list = [line.strip() for line in open(LIST_PATH)]
-    image_paths = [os.path.join(DATA_DIR, p.split()[0]) for p in image_list]
-
-    # Create TF1.x iterator for the dataset
-    iterator = tf.compat.v1.data.make_one_shot_iterator(val_dataset)
-    next_element = iterator.get_next()
-    
-    # Process each image
-    step = 0
-    try:
-        while step < NUM_STEPS:
-            # Get the next batch from dataset
-            image_batch, label_batch, edge_batch = model.sess.run(next_element)
-            
-            # Run inference
-            parsing_fc, parsing_rf_fc, edge_rf_fc = model(image_batch)
-            
-            # Process outputs
-            parsing_out = np.argmax(parsing_fc, axis=-1)
-            edge_out = 1.0 / (1.0 + np.exp(-edge_rf_fc))  # sigmoid
-            parsing_np = parsing_out.astype(np.uint8)
-            edge_np = (edge_out > 0.5).astype(np.uint8) * 255
-            
-            for i in range(parsing_np.shape[0]):
-                img_id = os.path.splitext(os.path.basename(image_paths[step * BATCH_SIZE + i]))[0]
-                
-                # Check if running from API (expects specific filename)
-                if os.path.exists('/home/paperspace/output'):
-                    # API mode - use expected filename
-                    parsing_filename = 'input.png'
-                    edge_filename = 'input_edge.png'
-                else:
-                    # Standalone mode - use image ID
-                    parsing_filename = f'{img_id}.png'
-                    edge_filename = f'{img_id}.png'
-                
-                cv2.imwrite(f'{parsing_dir}/{parsing_filename}', parsing_np[i])
-                cv2.imwrite(f'{edge_dir}/{edge_filename}', edge_np[i])
-                print(f"Saved: {img_id} -> {parsing_filename}")
-            
-            step += 1
-            
-    except tf.errors.OutOfRangeError:
-        print("Finished processing all images in dataset")
+        print("❌ No input image found at /home/paperspace/datasets/input.jpg")
+        print("This script expects to be called from the API mode")
+        sys.exit(1)
 
 except Exception as e:
     print(f"Error during processing: {str(e)}")
