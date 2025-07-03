@@ -39,7 +39,7 @@ class PGNKeras:
             parsing_rf_fc = self.pgn_model.layers['parsing_rf_fc']
             edge_rf_fc = self.pgn_model.layers['edge_rf_fc']
             
-        return parsing_fc, parsing_rf_fc, edge_rf_fc
+            return parsing_fc, parsing_rf_fc, edge_rf_fc
             
         except Exception as e:
             print(f"[ERROR] Forward pass failed: {e}")
