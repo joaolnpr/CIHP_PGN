@@ -93,28 +93,47 @@ try:
     image_list = [line.strip() for line in open(LIST_PATH)]
     image_paths = [os.path.join(DATA_DIR, p.split()[0]) for p in image_list]
 
-    for step, (image_batch, label_batch, edge_batch) in enumerate(val_dataset):
-        parsing_fc, parsing_rf_fc, edge_rf_fc = model(image_batch)
-        parsing_out = tf.argmax(parsing_fc, axis=-1)
-        edge_out = tf.sigmoid(edge_rf_fc)
-        parsing_np = parsing_out.numpy().astype(np.uint8)
-        edge_np = (edge_out.numpy() > 0.5).astype(np.uint8) * 255
-        for i in range(parsing_np.shape[0]):
-            img_id = os.path.splitext(os.path.basename(image_paths[step * BATCH_SIZE + i]))[0]
+    # Create TF1.x iterator for the dataset
+    iterator = tf.compat.v1.data.make_one_shot_iterator(val_dataset)
+    next_element = iterator.get_next()
+    
+    # Process each image
+    step = 0
+    try:
+        while step < NUM_STEPS:
+            # Get the next batch from dataset
+            image_batch, label_batch, edge_batch = model.sess.run(next_element)
             
-            # Check if running from API (expects specific filename)
-            if os.path.exists('/home/paperspace/output'):
-                # API mode - use expected filename
-                parsing_filename = 'input.png'
-                edge_filename = 'input_edge.png'
-            else:
-                # Standalone mode - use image ID
-                parsing_filename = f'{img_id}.png'
-                edge_filename = f'{img_id}.png'
+            # Run inference
+            parsing_fc, parsing_rf_fc, edge_rf_fc = model(image_batch)
             
-            cv2.imwrite(f'{parsing_dir}/{parsing_filename}', parsing_np[i])
-            cv2.imwrite(f'{edge_dir}/{edge_filename}', edge_np[i])
-            print(f"Saved: {img_id} -> {parsing_filename}")
+            # Process outputs
+            parsing_out = np.argmax(parsing_fc, axis=-1)
+            edge_out = 1.0 / (1.0 + np.exp(-edge_rf_fc))  # sigmoid
+            parsing_np = parsing_out.astype(np.uint8)
+            edge_np = (edge_out > 0.5).astype(np.uint8) * 255
+            
+            for i in range(parsing_np.shape[0]):
+                img_id = os.path.splitext(os.path.basename(image_paths[step * BATCH_SIZE + i]))[0]
+                
+                # Check if running from API (expects specific filename)
+                if os.path.exists('/home/paperspace/output'):
+                    # API mode - use expected filename
+                    parsing_filename = 'input.png'
+                    edge_filename = 'input_edge.png'
+                else:
+                    # Standalone mode - use image ID
+                    parsing_filename = f'{img_id}.png'
+                    edge_filename = f'{img_id}.png'
+                
+                cv2.imwrite(f'{parsing_dir}/{parsing_filename}', parsing_np[i])
+                cv2.imwrite(f'{edge_dir}/{edge_filename}', edge_np[i])
+                print(f"Saved: {img_id} -> {parsing_filename}")
+            
+            step += 1
+            
+    except tf.errors.OutOfRangeError:
+        print("Finished processing all images in dataset")
 
 except Exception as e:
     print(f"Error during processing: {str(e)}")
