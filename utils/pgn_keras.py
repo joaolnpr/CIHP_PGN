@@ -79,9 +79,33 @@ class PGNKeras:
             # Initialize variables first
             self.sess.run(tf.compat.v1.global_variables_initializer())
             
-            # Create saver and restore weights
-            saver = tf.compat.v1.train.Saver()
-            saver.restore(self.sess, ckpt_file)
+            # Get variables that exist in checkpoint
+            checkpoint_reader = tf.train.load_checkpoint(ckpt_file)
+            checkpoint_vars = set(checkpoint_reader.get_variable_to_shape_map().keys())
+            
+            # Get variables in current graph (excluding momentum variables)
+            graph_vars = {}
+            for var in tf.compat.v1.global_variables():
+                var_name = var.name.split(':')[0]  # Remove :0 suffix
+                if '/Momentum' not in var_name:  # Skip momentum variables
+                    graph_vars[var_name] = var
+            
+            # Find intersection - variables that exist in both
+            vars_to_restore = {}
+            for var_name, var in graph_vars.items():
+                if var_name in checkpoint_vars:
+                    vars_to_restore[var_name] = var
+            
+            print(f"[INFO] Found {len(vars_to_restore)} variables to restore out of {len(graph_vars)} graph variables")
+            print(f"[INFO] Checkpoint contains {len(checkpoint_vars)} variables")
+            
+            if vars_to_restore:
+                # Create saver with only restorable variables
+                saver = tf.compat.v1.train.Saver(vars_to_restore)
+                saver.restore(self.sess, ckpt_file)
+                print(f"[INFO] Successfully restored {len(vars_to_restore)} variables from checkpoint!")
+            else:
+                print("[WARNING] No matching variables found between graph and checkpoint!")
             
             print("[INFO] Checkpoint loaded successfully!")
             
