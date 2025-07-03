@@ -241,10 +241,61 @@ class Network(object):
         
     @layer
     def batch_normalization(self, input, name, is_training, activation_fn=None, scale=True):
-        bn = tf.keras.layers.BatchNormalization(scale=scale)
-        x = bn(input, training=is_training)
+        """Manual batch normalization implementation that matches checkpoint variable names"""
+        # Get the number of channels
+        channels = input.shape[-1]
+        
+        # Create variables with names that match the checkpoint
+        # Use tf.compat.v1.get_variable to ensure consistent naming
+        with tf.compat.v1.variable_scope(name, reuse=tf.compat.v1.AUTO_REUSE):
+            beta = tf.compat.v1.get_variable(
+                'beta', 
+                shape=[channels], 
+                initializer=tf.compat.v1.zeros_initializer(),
+                trainable=self.trainable
+            )
+            
+            if scale:
+                gamma = tf.compat.v1.get_variable(
+                    'gamma', 
+                    shape=[channels], 
+                    initializer=tf.compat.v1.ones_initializer(),
+                    trainable=self.trainable
+                )
+            else:
+                gamma = tf.ones([channels])
+            
+            moving_mean = tf.compat.v1.get_variable(
+                'moving_mean', 
+                shape=[channels], 
+                initializer=tf.compat.v1.zeros_initializer(),
+                trainable=False
+            )
+            
+            moving_variance = tf.compat.v1.get_variable(
+                'moving_variance', 
+                shape=[channels], 
+                initializer=tf.compat.v1.ones_initializer(),
+                trainable=False
+            )
+        
+        # Apply batch normalization
+        if is_training:
+            x, batch_mean, batch_var = tf.compat.v1.nn.fused_batch_norm(
+                input, gamma, beta, epsilon=1e-5, 
+                is_training=is_training, name='batchnorm'
+            )
+            # Update moving averages (would be used during training)
+            # For inference, we just use the stored moving averages
+        else:
+            x, _, _ = tf.compat.v1.nn.fused_batch_norm(
+                input, gamma, beta, moving_mean, moving_variance,
+                epsilon=1e-5, is_training=is_training, name='batchnorm'
+            )
+        
         if activation_fn is not None:
             x = activation_fn(x)
+        
         return x
 
     @layer

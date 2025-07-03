@@ -30,8 +30,14 @@ class PGNKeras:
             name='data'
         )
         
-        # Create the model
-        self.model = PGNModel({'data': self.input_placeholder})
+        # Create the model in inference mode
+        self.model = PGNModel(
+            {'data': self.input_placeholder}, 
+            trainable=False, 
+            is_training=False, 
+            n_classes=self.n_classes, 
+            keep_prob=1.0
+        )
         
         # Get outputs
         self.parsing_fc = self.model.layers['parsing_fc']
