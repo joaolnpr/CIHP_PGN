@@ -1,5 +1,6 @@
 matplotlib
-opencv-python==4.2.0.32
-Pillow
-scipy
-tensorflow==1.15
+opencv-python>=4.2.0
+Pillow>=9.0.0
+scipy>=1.7.0
+tensorflow>=2.13.0
+numpy>=1.21.0
