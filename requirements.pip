@@ -4,3 +4,5 @@ Pillow>=9.0.0
 scipy>=1.7.0
 tensorflow>=2.13.0
 numpy>=1.21.0
+gast>=0.4.0
+gdown

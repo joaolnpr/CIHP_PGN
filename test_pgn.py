@@ -21,7 +21,30 @@ N_CLASSES = 20
 DATA_DIR = './datasets/CIHP'
 LIST_PATH = './datasets/CIHP/list/val.txt'
 DATA_ID_LIST = './datasets/CIHP/list/val_id.txt'
-RESTORE_FROM = './checkpoint/CIHP_pgn'
+# Check for checkpoint in multiple locations
+if os.path.exists('/home/paperspace/checkpoint/CIHP_pgn'):
+    RESTORE_FROM = '/home/paperspace/checkpoint/CIHP_pgn'
+elif os.path.exists('./checkpoint/CIHP_pgn'):
+    RESTORE_FROM = './checkpoint/CIHP_pgn'
+else:
+    RESTORE_FROM = './checkpoint/CIHP_pgn'  # Default, will show error
+    print(f"[WARNING] Checkpoint not found. Attempting quick download...")
+    try:
+        # Try to run quick download script
+        import subprocess
+        result = subprocess.run([sys.executable, 'quick_download.py'], 
+                              capture_output=True, text=True, timeout=300)
+        if result.returncode == 0:
+            print(f"[INFO] Quick download successful!")
+            # Re-check checkpoint locations
+            if os.path.exists('/home/paperspace/checkpoint/CIHP_pgn'):
+                RESTORE_FROM = '/home/paperspace/checkpoint/CIHP_pgn'
+            elif os.path.exists('./checkpoint/CIHP_pgn'):
+                RESTORE_FROM = './checkpoint/CIHP_pgn'
+        else:
+            print(f"[WARNING] Quick download failed: {result.stderr}")
+    except Exception as e:
+        print(f"[WARNING] Could not run quick download: {e}")
 BATCH_SIZE = 1
 
 # Check if required files exist
@@ -52,9 +75,16 @@ try:
     # Load model
     model = PGNKeras(n_classes=N_CLASSES, checkpoint_path=RESTORE_FROM)
 
+    # Check if running from API (expects output in parent directory)
+if os.path.exists('/home/paperspace/output'):
+    # API mode - save to expected location
+    parsing_dir = '/home/paperspace/output'
+    edge_dir = '/home/paperspace/output'
+else:
+    # Standalone mode - use local output
     parsing_dir = './output/cihp_parsing_maps'
-    os.makedirs(parsing_dir, exist_ok=True)
     edge_dir = './output/cihp_edge_maps'
+    os.makedirs(parsing_dir, exist_ok=True)
     os.makedirs(edge_dir, exist_ok=True)
 
     # Get image paths for saving
@@ -69,9 +99,20 @@ try:
         edge_np = (edge_out.numpy() > 0.5).astype(np.uint8) * 255
         for i in range(parsing_np.shape[0]):
             img_id = os.path.splitext(os.path.basename(image_paths[step * BATCH_SIZE + i]))[0]
-            cv2.imwrite(f'{parsing_dir}/{img_id}.png', parsing_np[i])
-            cv2.imwrite(f'{edge_dir}/{img_id}.png', edge_np[i])
-            print(f"Saved: {img_id}")
+            
+            # Check if running from API (expects specific filename)
+            if os.path.exists('/home/paperspace/output'):
+                # API mode - use expected filename
+                parsing_filename = 'input.png'
+                edge_filename = 'input_edge.png'
+            else:
+                # Standalone mode - use image ID
+                parsing_filename = f'{img_id}.png'
+                edge_filename = f'{img_id}.png'
+            
+            cv2.imwrite(f'{parsing_dir}/{parsing_filename}', parsing_np[i])
+            cv2.imwrite(f'{edge_dir}/{edge_filename}', edge_np[i])
+            print(f"Saved: {img_id} -> {parsing_filename}")
 
 except Exception as e:
     print(f"Error during processing: {str(e)}")
