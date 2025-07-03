@@ -129,11 +129,7 @@ class PGNKeras:
             feed_dict={self.input_placeholder: image_batch}
         )
         
-        # Convert to TensorFlow tensors for compatibility
-        parsing_fc = tf.constant(parsing_fc)
-        parsing_rf_fc = tf.constant(parsing_rf_fc) 
-        edge_rf_fc = tf.constant(edge_rf_fc)
-        
+        # Return numpy arrays directly (more compatible with both TF1.x and TF2.x)
         return parsing_fc, parsing_rf_fc, edge_rf_fc
 
     def __del__(self):

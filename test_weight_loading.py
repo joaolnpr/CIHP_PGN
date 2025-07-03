@@ -53,10 +53,10 @@ def test_model_loading():
         print(f"  edge_rf_fc shape: {edge_rf_fc.shape}")
         
         # Check if outputs are meaningful (not all zeros)
-        parsing_mean = np.mean(parsing_fc.numpy())
-        parsing_std = np.std(parsing_fc.numpy())
-        edge_mean = np.mean(edge_rf_fc.numpy())
-        edge_std = np.std(edge_rf_fc.numpy())
+        parsing_mean = np.mean(parsing_fc)
+        parsing_std = np.std(parsing_fc)
+        edge_mean = np.mean(edge_rf_fc)
+        edge_std = np.std(edge_rf_fc)
         
         print(f"📈 Output statistics:")
         print(f"  parsing_fc - mean: {parsing_mean:.6f}, std: {parsing_std:.6f}")
