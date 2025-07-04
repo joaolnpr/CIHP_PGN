@@ -1,3 +1,8 @@
+"""
+This script is for debugging CIHP_PGN model inference.
+It expects an input image at /home/paperspace/datasets/input.jpg
+and saves the parsing and edge masks to /home/paperspace/output/
+"""
 from __future__ import print_function
 import argparse
 from datetime import datetime
